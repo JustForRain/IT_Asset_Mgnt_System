@@ -1,11 +1,11 @@
-DROP DATABASE IF EXISTS `pig`;
+DROP DATABASE IF EXISTS `it_asset_mgnt_system`;
 
-CREATE DATABASE  `pig` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;
+CREATE DATABASE  `it_asset_mgnt_system` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
-USE `pig`;
+USE `it_asset_mgnt_system`;
 
 
 -- ----------------------------

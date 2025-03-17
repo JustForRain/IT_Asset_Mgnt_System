@@ -11,13 +11,13 @@ spring:
     type: redis
   data:
     redis:
-      host: pig-redis
+      host: cde-redis
   # 数据库相关配置
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: root
     password: root
-    url: jdbc:mysql://pig-mysql:3306/pig?characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=GMT%2B8&allowMultiQueries=true&nullCatalogMeansCurrent=true
+    url: jdbc:mysql://cde-mysql:3306/it_asset_mgnt_system?characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=GMT%2B8&allowMultiQueries=true&nullCatalogMeansCurrent=true
   # 定时任务属性配置
   quartz:
     properties:
@@ -40,7 +40,7 @@ spring:
             threadsInheritContextClassLoaderOfInitializingThread: true
     job-store-type: jdbc
     jdbc:
-      initialize-schema: always # 生产注意设置为 never
+      initialize-schema: never # 生产注意设置为 never
   # 上传文件大小限制
   servlet:
     multipart:
