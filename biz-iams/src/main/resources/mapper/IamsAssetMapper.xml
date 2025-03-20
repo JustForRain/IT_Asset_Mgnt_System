@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.pig4cloud.pig.biz.iams.mapper.IamsAssetMapper">
+
+  <resultMap id="iamsAssetMap" type="com.pig4cloud.pig.biz.iams.entity.IamsAssetEntity">
+        <id property="id" column="id"/>
+        <id property="brandName" column="brand_name"/>
+        <id property="model" column="model"/>
+        <id property="sn" column="sn"/>
+        <id property="size" column="size"/>
+        <id property="contractId" column="contract_id"/>
+        <id property="status" column="status"/>
+        <id property="type" column="type"/>
+  </resultMap>
+</mapper>

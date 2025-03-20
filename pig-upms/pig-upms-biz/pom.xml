@@ -99,6 +99,13 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-undertow</artifactId>
         </dependency>
+		<!--引入具体业务 模块-->
+		<dependency>
+			<groupId>com.pig4cloud</groupId>
+			<artifactId>biz-iams</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
     </dependencies>
 
     <build>

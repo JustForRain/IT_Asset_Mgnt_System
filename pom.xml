@@ -112,6 +112,8 @@
         <module>pig-upms</module>
         <!-- PIG通用模块 -->
         <module>pig-common</module>
+        <!-- 具体业务模块 IT_Asset_Mgnt_System IT资产管理系统 -->
+		<module>biz-iams</module>
     </modules>
 
     <dependencyManagement>

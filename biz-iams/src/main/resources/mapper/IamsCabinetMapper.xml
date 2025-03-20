@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.pig4cloud.pig.biz.iams.mapper.IamsCabinetMapper">
+
+  <resultMap id="iamsCabinetMap" type="com.pig4cloud.pig.biz.iams.entity.IamsCabinetEntity">
+        <id property="id" column="id"/>
+        <id property="moduleId" column="module_id"/>
+        <id property="size" column="size"/>
+        <id property="rowNum" column="row_num"/>
+        <id property="columnNum" column="column_num"/>
+        <id property="name" column="name"/>
+        <id property="sortOrder" column="sort_order"/>
+  </resultMap>
+</mapper>

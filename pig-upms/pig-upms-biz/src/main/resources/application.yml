@@ -92,3 +92,7 @@ mybatis-plus:
     jdbc-type-for-null: 'null'
     call-setters-on-nulls: true
     shrink-whitespaces-in-sql: true
+
+mybatis:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.pig4cloud.pig.biz.iams.mapper.IamsModuleMapper">
+
+  <resultMap id="iamsModuleMap" type="com.pig4cloud.pig.biz.iams.entity.IamsModuleEntity">
+        <id property="id" column="id"/>
+        <id property="roomId" column="room_id"/>
+        <id property="name" column="name"/>
+        <id property="size" column="size"/>
+  </resultMap>
+</mapper>
