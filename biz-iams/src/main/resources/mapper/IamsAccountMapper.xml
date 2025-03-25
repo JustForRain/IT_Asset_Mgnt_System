@@ -11,5 +11,6 @@
         <id property="account" column="account"/>
         <id property="password" column="password"/>
         <id property="protocol" column="protocol"/>
+        <id property="port" column="port"/>
   </resultMap>
 </mapper>

@@ -6,10 +6,13 @@ import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.pig4cloud.pig.biz.iams.dto.ChangePasswordDto;
 import com.pig4cloud.pig.biz.iams.dto.IamsAccountDto;
 import com.pig4cloud.pig.biz.iams.entity.IamsAssetEntity;
+import com.pig4cloud.pig.biz.iams.entity.IamsPasswordLogEntity;
 import com.pig4cloud.pig.biz.iams.entity.IamsShelfEntity;
 import com.pig4cloud.pig.biz.iams.service.IamsAssetService;
+import com.pig4cloud.pig.biz.iams.service.IamsPasswordLogService;
 import com.pig4cloud.pig.biz.iams.service.IamsShelfService;
 import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.common.log.annotation.SysLog;
@@ -41,9 +44,10 @@ import java.util.Objects;
 @SecurityRequirement(name = HttpHeaders.AUTHORIZATION)
 public class IamsAccountController {
 
-    private final  IamsAccountService iamsAccountService;
+    private final IamsAccountService iamsAccountService;
 	private final IamsShelfService iamsShelfService;
 	private final IamsAssetService iamsAssetService;
+	private final IamsPasswordLogService iamsPasswordLogService;
 
     /**
      * 分页查询
@@ -93,8 +97,12 @@ public class IamsAccountController {
     @SysLog("新增账户" )
     @PostMapping
     @PreAuthorize("@pms.hasPermission('iams_iamsAccount_add')" )
-    public R save(@RequestBody IamsAccountEntity iamsAccount) {
-        return R.ok(iamsAccountService.save(iamsAccount));
+    public R save(@RequestBody IamsAccountDto iamsAccount) {
+		String sn = iamsAccount.getSn();
+		IamsAssetEntity assetEntity = iamsAssetService.getBySn(sn);
+		iamsAccount.setAssetId(assetEntity.getId());
+		iamsAccountService.save(iamsAccount);
+		return R.ok();
     }
 
     /**
@@ -135,5 +143,31 @@ public class IamsAccountController {
     @PreAuthorize("@pms.hasPermission('iams_iamsAccount_export')" )
     public List<IamsAccountEntity> export(IamsAccountEntity iamsAccount,Long[] ids) {
         return iamsAccountService.list(Wrappers.lambdaQuery(iamsAccount).in(ArrayUtil.isNotEmpty(ids), IamsAccountEntity::getId, ids));
+    }
+
+	/**
+     * 修改密码
+     * @param changePasswordDto 修改密码
+     * @return R
+     */
+    @Operation(summary = "修改密码" , description = "修改密码" )
+    @SysLog("修改账户" )
+    @PutMapping("/changePassword")
+    @PreAuthorize("@pms.hasPermission('iams_iamsAccount_edit')" )
+    public R changePasswordById(@RequestBody ChangePasswordDto changePasswordDto) {
+		// 更新account表
+		Long accountId = changePasswordDto.getId();
+		IamsAccountEntity accountEntity = iamsAccountService.getById(accountId);
+		accountEntity.setPassword(changePasswordDto.getNewPassword());
+		iamsAccountService.updateById(accountEntity);
+		//增加iams_password_log 记录
+		System.out.println(changePasswordDto.getNewPassword());
+		IamsPasswordLogEntity passwordLogEntity = new IamsPasswordLogEntity();
+		passwordLogEntity.setAccountId(accountId);
+		passwordLogEntity.setAssetId(accountEntity.getAssetId());
+		passwordLogEntity.setOldPassword(changePasswordDto.getOldPassword());
+		passwordLogEntity.setNewPassword(changePasswordDto.getNewPassword());
+		iamsPasswordLogService.save(passwordLogEntity);
+        return R.ok();
     }
 }

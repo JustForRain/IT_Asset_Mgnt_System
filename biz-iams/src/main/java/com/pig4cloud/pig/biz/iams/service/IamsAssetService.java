@@ -23,4 +23,6 @@ public interface IamsAssetService extends IService<IamsAssetEntity> {
 	HashMap<String, String> getLocationByAssetId(Long assetId);
 
 	List<IamsAssetEntity> listAssetByContractId(Long id);
+
+	IamsAssetEntity getBySn(String sn);
 }

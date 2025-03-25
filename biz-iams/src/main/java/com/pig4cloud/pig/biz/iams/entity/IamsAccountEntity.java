@@ -61,4 +61,11 @@ public class IamsAccountEntity extends Model<IamsAccountEntity> {
 	*/
     @Schema(description="协议")
     private String protocol;
+
+	/**
+	* 端口
+	*/
+    @Schema(description="端口")
+    private Integer port;
+
 }
