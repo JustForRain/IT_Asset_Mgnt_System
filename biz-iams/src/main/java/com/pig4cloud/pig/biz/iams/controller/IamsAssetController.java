@@ -10,10 +10,14 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.pig4cloud.pig.biz.iams.dto.IamsAssetDetailDto;
 import com.pig4cloud.pig.biz.iams.dto.IamsAssetDto;
 import com.pig4cloud.pig.biz.iams.dto.OptionAttributes;
+import com.pig4cloud.pig.biz.iams.entity.IamsAccountEntity;
 import com.pig4cloud.pig.biz.iams.entity.IamsAssetEntity;
 import com.pig4cloud.pig.biz.iams.entity.IamsContractEntity;
+import com.pig4cloud.pig.biz.iams.entity.IamsShelfEntity;
+import com.pig4cloud.pig.biz.iams.service.IamsAccountService;
 import com.pig4cloud.pig.biz.iams.service.IamsAssetService;
 import com.pig4cloud.pig.biz.iams.service.IamsContractService;
+import com.pig4cloud.pig.biz.iams.service.IamsShelfService;
 import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.common.log.annotation.SysLog;
 import com.pig4cloud.plugin.excel.annotation.ResponseExcel;
@@ -44,7 +48,9 @@ import java.util.Objects;
 public class IamsAssetController {
 
     private final  IamsAssetService iamsAssetService;
+	private final IamsShelfService iamsShelfService;
 	private final IamsContractService iamsContractService;
+	private final IamsAccountService iamsAccountService;
 
     /**
      * 分页查询
@@ -166,16 +172,20 @@ public class IamsAssetController {
     }
 
 	/**
-     * 非分页查询
+     * 设备详情页面
      * @param id 资产
      * @return
      */
-    @Operation(summary = "非分页查询" , description = "分页查询" )
+    @Operation(summary = "设备详情页面" , description = "设备详情页面" )
     @GetMapping("/detail/{id}" )
     @PreAuthorize("@pms.hasPermission('iams_iamsAsset_view')" )
     public R getIamsAssetDetail(@PathVariable("id" ) Long id) {
 		IamsAssetEntity iamsAssetEntity = iamsAssetService.getById(id);
 		IamsAssetDetailDto iamsAssetDetailDto = BeanUtil.copyProperties(iamsAssetEntity, IamsAssetDetailDto.class);
+		IamsShelfEntity shelfEntity = iamsShelfService.getByAssetId(id);
+		iamsAssetDetailDto.setRole(shelfEntity.getRole());
+		List<IamsAccountEntity> iamsAccountEntityList = iamsAccountService.getbyAssetId(id);
+		iamsAssetDetailDto.setAccountList(iamsAccountEntityList);
 		return R.ok(iamsAssetDetailDto);
     }
 }
