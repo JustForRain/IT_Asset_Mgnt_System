@@ -18,12 +18,12 @@ public class IamsShelfDto extends IamsShelfEntity {
 	/**
 	 * 品牌
 	 */
-	private String brandName;
+	private String brand;
 
 	/**
 	 * 型号
 	 */
-	private String deviceName;
+	private String model;
 
 	/**
 	 * 序列号
@@ -33,27 +33,25 @@ public class IamsShelfDto extends IamsShelfEntity {
 	/**
 	 * 机房名称
 	 */
-	private String roomName;
+	private String room;
 
 	/**
 	 * 微模块名称
 	 */
-	private String moduleName;
+	private String module;
 
 	/**
 	 * 机柜名称
 	 */
-	private String cabinetName;
+	private String cabinet;
 
 	/**
 	 * 上架位置
 	 */
-	private String shelfName;
+	private String shelf;
 
 	/**
-	 * 设备角色
+	 * 设备大小
 	 */
-	private String roleName;
-
-
+	private Integer size;
 }

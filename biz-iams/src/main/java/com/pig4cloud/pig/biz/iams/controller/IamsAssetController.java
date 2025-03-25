@@ -7,6 +7,7 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.pig4cloud.pig.biz.iams.dto.IamsAssetDetailDto;
 import com.pig4cloud.pig.biz.iams.dto.IamsAssetDto;
 import com.pig4cloud.pig.biz.iams.dto.OptionAttributes;
 import com.pig4cloud.pig.biz.iams.entity.IamsAssetEntity;
@@ -65,13 +66,13 @@ public class IamsAssetController {
 		List list = records.stream().map(asset -> {
 			IamsAssetDto iamsAssetDto = BeanUtil.copyProperties(asset, IamsAssetDto.class);
 			IamsContractEntity iamsContractEntity = iamsContractService.getById(asset.getContractId());
-			iamsAssetDto.setProjectName(iamsContractEntity.getProjectName());
+			iamsAssetDto.setProject(iamsContractEntity.getProjectName());
 			HashMap<String,String> location = iamsAssetService.getLocationByAssetId(asset.getId());
-			iamsAssetDto.setRoomName(location.get("roomName"));
-			iamsAssetDto.setModuleName(location.get("moduleName"));
-			iamsAssetDto.setCabinetName(location.get("cabinetName"));
-			iamsAssetDto.setShelfName(location.get("shelfName"));
-			iamsAssetDto.setRoleName(location.get("roleName"));
+			iamsAssetDto.setRoom(location.get("room"));
+			iamsAssetDto.setModule(location.get("module"));
+			iamsAssetDto.setCabinet(location.get("cabinet"));
+			iamsAssetDto.setShelf(location.get("shelf"));
+			iamsAssetDto.setRole(location.get("role"));
 			return iamsAssetDto;
 		}).toList();
 		searchresult.setRecords(list);
@@ -162,5 +163,19 @@ public class IamsAssetController {
 			optionAttributes.setValue(String.valueOf(asset.getId()));
 			return optionAttributes;
 		}).toList());
+    }
+
+	/**
+     * 非分页查询
+     * @param id 资产
+     * @return
+     */
+    @Operation(summary = "非分页查询" , description = "分页查询" )
+    @GetMapping("/detail/{id}" )
+    @PreAuthorize("@pms.hasPermission('iams_iamsAsset_view')" )
+    public R getIamsAssetDetail(@PathVariable("id" ) Long id) {
+		IamsAssetEntity iamsAssetEntity = iamsAssetService.getById(id);
+		IamsAssetDetailDto iamsAssetDetailDto = BeanUtil.copyProperties(iamsAssetEntity, IamsAssetDetailDto.class);
+		return R.ok(iamsAssetDetailDto);
     }
 }

@@ -9,6 +9,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.pig4cloud.pig.biz.iams.dto.IamsModuleDto;
 import com.pig4cloud.pig.biz.iams.entity.IamsModuleEntity;
 import com.pig4cloud.pig.biz.iams.entity.IamsRoomEntity;
+import com.pig4cloud.pig.biz.iams.service.IamsCabinetDetailService;
 import com.pig4cloud.pig.biz.iams.service.IamsModuleService;
 import com.pig4cloud.pig.biz.iams.service.IamsRoomService;
 import com.pig4cloud.pig.common.core.util.R;
@@ -40,6 +41,7 @@ public class IamsModuleController {
 
     private final  IamsModuleService iamsModuleService;
 	private final IamsRoomService iamsRoomService;
+	private final IamsCabinetDetailService iamsCabinetDetailService;
 
     /**
      * 分页查询
@@ -129,4 +131,10 @@ public class IamsModuleController {
     public List<IamsModuleEntity> export(IamsModuleEntity iamsModule,Long[] ids) {
         return iamsModuleService.list(Wrappers.lambdaQuery(iamsModule).in(ArrayUtil.isNotEmpty(ids), IamsModuleEntity::getId, ids));
     }
+
+	@GetMapping("/unit/detail/{id}")
+    @PreAuthorize("@pms.hasPermission('iams_iamsModule_view')" )
+	public R getUnitDetail(@PathVariable("id") Long id) {
+		return R.ok(iamsCabinetDetailService.getUnitDetailByModuleId(id));
+	}
 }

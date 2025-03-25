@@ -8,15 +8,10 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.pig4cloud.pig.biz.iams.dto.IamsCabinetDto;
-import com.pig4cloud.pig.biz.iams.dto.IamsShelfDto;
-import com.pig4cloud.pig.biz.iams.entity.IamsAssetEntity;
 import com.pig4cloud.pig.biz.iams.entity.IamsCabinetEntity;
 import com.pig4cloud.pig.biz.iams.entity.IamsModuleEntity;
 import com.pig4cloud.pig.biz.iams.entity.IamsShelfEntity;
-import com.pig4cloud.pig.biz.iams.service.IamsAssetService;
-import com.pig4cloud.pig.biz.iams.service.IamsCabinetService;
-import com.pig4cloud.pig.biz.iams.service.IamsModuleService;
-import com.pig4cloud.pig.biz.iams.service.IamsShelfService;
+import com.pig4cloud.pig.biz.iams.service.*;
 import com.pig4cloud.pig.biz.iams.vo.SelectOption;
 import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.common.log.annotation.SysLog;
@@ -48,7 +43,7 @@ public class IamsCabinetController {
 	private final IamsCabinetService iamsCabinetService;
 	private final IamsModuleService iamsModuleService;
 	private final IamsShelfService iamsShelfService;
-	private final IamsAssetService iamsAssetService;
+	private final IamsCabinetDetailService iamsCabinetDetailService;
 
 	/**
 	 * 分页查询
@@ -196,22 +191,6 @@ public class IamsCabinetController {
 	@GetMapping("/unit/detail/{id}")
 	@PreAuthorize("@pms.hasPermission('iams_iamsCabinet_view')")
 	public R getUnitDetail(@PathVariable("id") Long id) {
-		Map<String, Object> map = new HashMap<>();
-		//获取机柜大小
-		IamsCabinetEntity cabinetEntity = iamsCabinetService.getById(id);
-		map.put("size", cabinetEntity.getSize());
-		map.put("cabinetName",cabinetEntity.getName());
-		//获取上架设备
-		List<IamsShelfDto> iamsShelfs = iamsShelfService.getByCabinetId(id).stream().map(iamsShelfEntity -> {
-			IamsShelfDto iamsShelfDto = BeanUtil.copyProperties(iamsShelfEntity, IamsShelfDto.class);
-			IamsAssetEntity iamsAssetEntity = iamsAssetService.getById(iamsShelfDto.getAssetId());
-			iamsShelfDto.setDeviceName(iamsAssetEntity.getModel());
-			iamsShelfDto.setBrandName(iamsAssetEntity.getBrandName());
-			iamsShelfDto.setSn(iamsAssetEntity.getSn());
-			iamsShelfDto.setRole(iamsShelfEntity.getRole());
-			return iamsShelfDto;
-		}).toList();
-		map.put("shelfs", iamsShelfs);
-		return R.ok(map);
+		return R.ok(iamsCabinetDetailService.getUnitDetail(id));
 	}
 }

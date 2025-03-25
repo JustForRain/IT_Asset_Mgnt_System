@@ -20,31 +20,31 @@ public class IamsAssetDto extends IamsAssetEntity {
 	* 项目名称
 	*/
     @Schema(description="项目名称")
-    private String projectName;
+    private String project;
 
 	/**
 	 * 机房名称
 	 */
-	private String roomName;
+	private String room;
 
 	/**
 	 * 微模块名称
 	 */
-	private String moduleName;
+	private String module;
 
 	/**
 	 * 机柜名称
 	 */
-	private String cabinetName;
+	private String cabinet;
 
 	/**
 	 * 上架位置
 	 */
-	private String shelfName;
+	private String shelf;
 
 	/**
 	 * 设备角色
 	 */
-	private String roleName;
+	private String role;
 
 }

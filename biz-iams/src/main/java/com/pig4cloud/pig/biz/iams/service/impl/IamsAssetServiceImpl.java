@@ -30,22 +30,23 @@ public class IamsAssetServiceImpl extends ServiceImpl<IamsAssetMapper, IamsAsset
 
 	@Override
 	public List<IamsAssetEntity> listAssetByContractId(Long id) {
-		LambdaQueryWrapper<IamsAssetEntity> queryWrapper= Wrappers.lambdaQuery();
-		queryWrapper.eq(IamsAssetEntity::getContractId,id);
+		LambdaQueryWrapper<IamsAssetEntity> queryWrapper = Wrappers.lambdaQuery();
+		queryWrapper.eq(IamsAssetEntity::getContractId, id);
 		return list(queryWrapper);
 	}
 
 	/**
 	 * 根据合同id查询资产总数
+	 *
 	 * @param id
 	 * @return
 	 */
 	@Override
 	public Integer getAssetTotalNumByContractId(Long id) {
-		LambdaQueryWrapper<IamsAssetEntity> queryWrapper= Wrappers.lambdaQuery();
-		queryWrapper.eq(IamsAssetEntity::getContractId,id);
+		LambdaQueryWrapper<IamsAssetEntity> queryWrapper = Wrappers.lambdaQuery();
+		queryWrapper.eq(IamsAssetEntity::getContractId, id);
 		List<IamsAssetEntity> list = list(queryWrapper);
-		if(list!=null){
+		if (list != null) {
 			return list.size();
 		}
 		return 0;
@@ -53,10 +54,10 @@ public class IamsAssetServiceImpl extends ServiceImpl<IamsAssetMapper, IamsAsset
 
 	@Override
 	public List<IamsAssetEntity> listByPutOnShelfEntityList(List<IamsShelfEntity> shelfEntityList) {
-		if (!shelfEntityList.isEmpty()){
+		if (!shelfEntityList.isEmpty()) {
 			List<Long> assetIds = shelfEntityList.stream().map(shelfEntity -> shelfEntity.getAssetId()).toList();
 			LambdaQueryWrapper<IamsAssetEntity> queryWrapper = Wrappers.lambdaQuery();
-			queryWrapper.in(IamsAssetEntity::getId,assetIds);
+			queryWrapper.in(IamsAssetEntity::getId, assetIds);
 			return list(queryWrapper);
 		}
 		return List.of();
@@ -64,10 +65,12 @@ public class IamsAssetServiceImpl extends ServiceImpl<IamsAssetMapper, IamsAsset
 
 	@Override
 	public void pullOffAssets(Long[] assetIds) {
-		LambdaQueryWrapper<IamsAssetEntity> queryWrapper=Wrappers.lambdaQuery();
-		queryWrapper.in(IamsAssetEntity::getId,assetIds);
+		LambdaQueryWrapper<IamsAssetEntity> queryWrapper = Wrappers.lambdaQuery();
+		queryWrapper.in(IamsAssetEntity::getId, assetIds);
 		List<IamsAssetEntity> list = list(queryWrapper);
-		list.forEach(iamsAssetEntity -> {iamsAssetEntity.setStatus(0);});
+		list.forEach(iamsAssetEntity -> {
+			iamsAssetEntity.setStatus(0);
+		});
 		updateBatchById(list);
 	}
 
@@ -76,31 +79,36 @@ public class IamsAssetServiceImpl extends ServiceImpl<IamsAssetMapper, IamsAsset
 		HashMap<String, String> map = new HashMap<>();
 		IamsShelfEntity iamsShelfEntity = iamsShelfService.getByAssetId(assetId);
 		// 设备角色
-		if(ObjUtil.isNotNull(iamsShelfEntity)&&ObjUtil.isNotNull(iamsShelfEntity.getRole())){
-			map.put("roleName",iamsShelfEntity.getRole());
+		if (ObjUtil.isNotNull(iamsShelfEntity) && ObjUtil.isNotNull(iamsShelfEntity.getRole())) {
+			map.put("role", iamsShelfEntity.getRole());
 		}
-		if(ObjUtil.isNotNull(iamsShelfEntity)&&ObjUtil.isNotNull(iamsShelfEntity.getUnitStart())&&ObjUtil.isNotNull(iamsShelfEntity.getUnitEnd())){
+		if (ObjUtil.isNotNull(iamsShelfEntity) && ObjUtil.isNotNull(iamsShelfEntity.getUnitStart()) && ObjUtil.isNotNull(iamsShelfEntity.getUnitEnd())) {
 			// 处理机架信息
 			Integer unitStart = iamsShelfEntity.getUnitStart();
 			Integer unitEnd = iamsShelfEntity.getUnitEnd();
-			if (ObjUtil.isNotNull(unitStart) && ObjUtil.isNotNull(unitEnd)){
-				map.put("shelfName", unitStart+"U-"+unitEnd+"U");
+			//判断1U还是多U设备
+			if (ObjUtil.isNotNull(unitStart) && ObjUtil.isNotNull(unitEnd)) {
+				if (unitStart.equals(unitEnd)) {
+					map.put("shelf", unitStart + "U");
+				} else {
+					map.put("shelf", unitStart + "U-" + unitEnd + "U");
+				}
 			}
 		}
 		// 处理机柜信息
-		if (ObjUtil.isNotNull(iamsShelfEntity)&&ObjUtil.isNotNull(iamsShelfEntity.getCabinetId())){
+		if (ObjUtil.isNotNull(iamsShelfEntity) && ObjUtil.isNotNull(iamsShelfEntity.getCabinetId())) {
 			IamsCabinetEntity iamsCabinetEntity = iamsCabinetService.getById(iamsShelfEntity.getCabinetId());
-			map.put("cabinetName", iamsCabinetEntity.getName());
+			map.put("cabinet", iamsCabinetEntity.getName());
 			// 处理微模块信息
-			if(ObjUtil.isNotNull(iamsCabinetEntity.getModuleId())){
+			if (ObjUtil.isNotNull(iamsCabinetEntity.getModuleId())) {
 				IamsModuleEntity iamsModuleEntity = iamsModuleService.getById(iamsCabinetEntity.getModuleId());
-				map.put("moduleName", iamsModuleEntity.getName());
+				map.put("module", iamsModuleEntity.getName());
 				// 处理机房信息
-				if(ObjUtil.isNotNull(iamsModuleEntity)&&ObjUtil.isNotNull(iamsModuleEntity.getRoomId())){
+				if (ObjUtil.isNotNull(iamsModuleEntity) && ObjUtil.isNotNull(iamsModuleEntity.getRoomId())) {
 					Long roomId = iamsModuleEntity.getRoomId();
 					IamsRoomEntity roomEntity = iamsRoomService.getById(roomId);
-					if(ObjUtil.isNotNull(roomEntity)&&ObjUtil.isNotNull(roomEntity.getName())){
-						map.put("roomName", roomEntity.getName());
+					if (ObjUtil.isNotNull(roomEntity) && ObjUtil.isNotNull(roomEntity.getName())) {
+						map.put("room", roomEntity.getName());
 					}
 				}
 			}

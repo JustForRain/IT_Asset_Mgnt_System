@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.pig4cloud.pig.biz.iams.entity.IamsRoomEntity;
+import com.pig4cloud.pig.biz.iams.service.IamsCabinetDetailService;
 import com.pig4cloud.pig.biz.iams.service.IamsRoomService;
 import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.common.log.annotation.SysLog;
@@ -35,6 +36,7 @@ import java.util.List;
 public class IamsRoomController {
 
     private final  IamsRoomService iamsRoomService;
+	private final IamsCabinetDetailService iamsCabinetDetailService;
 
     /**
      * 分页查询
@@ -115,4 +117,10 @@ public class IamsRoomController {
     public List<IamsRoomEntity> export(IamsRoomEntity iamsRoom,Long[] ids) {
         return iamsRoomService.list(Wrappers.lambdaQuery(iamsRoom).in(ArrayUtil.isNotEmpty(ids), IamsRoomEntity::getId, ids));
     }
+	@GetMapping("/unit/detail/{id}")
+    @PreAuthorize("@pms.hasPermission('iams_iamsRoom_view')" )
+	public R getUnitDetail(@PathVariable("id") Long id) {
+		return R.ok(iamsCabinetDetailService.getUnitDetailByRoomId(id));
+	}
+
 }
