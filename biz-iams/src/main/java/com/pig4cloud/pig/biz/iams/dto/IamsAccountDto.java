@@ -5,6 +5,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.util.List;
+
 /**
  * 账户前端展示实体
  *
@@ -24,4 +26,9 @@ public class IamsAccountDto extends IamsAccountEntity {
 	 * 设备SN
 	 */
 	private String sn;
+
+	/**
+	 * 多设备情况下，回传sn列表
+	 */
+	private List<String> sns;
 }
