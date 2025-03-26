@@ -162,7 +162,7 @@ public class IamsAssetController {
     public R getIamsAssetNoPage(@ParameterObject IamsAssetEntity iamsAsset) {
         LambdaQueryWrapper<IamsAssetEntity> wrapper = Wrappers.lambdaQuery();
 		//只搜索未上架的资产
-		wrapper.eq(IamsAssetEntity::getStatus,0);
+		wrapper.eq(IamsAssetEntity::getStatus,iamsAsset.getStatus());
 		return R.ok(iamsAssetService.list(wrapper).stream().map(asset->{
 			OptionAttributes optionAttributes=new OptionAttributes();
 			optionAttributes.setLabel(asset.getSn());

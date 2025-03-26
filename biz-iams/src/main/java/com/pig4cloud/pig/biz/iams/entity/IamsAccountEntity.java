@@ -68,4 +68,22 @@ public class IamsAccountEntity extends Model<IamsAccountEntity> {
     @Schema(description="端口")
     private Integer port;
 
+	/**
+	* MAC地址
+	*/
+    @Schema(description="MAC地址")
+    private String macAddress;
+
+	/**
+	* 单一设备
+	*/
+    @Schema(description="单一设备")
+    private Boolean single;
+
+	/**
+	* 虚拟SN
+	*/
+    @Schema(description="虚拟SN")
+    private String vsn;
+
 }
