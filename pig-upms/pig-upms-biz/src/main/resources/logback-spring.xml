@@ -59,6 +59,11 @@
         <appender-ref ref="error"/>
     </logger>
 
+	<!-- 针对Mapper接口包路径 -->
+	<logger name="com.pig4cloud.pig.biz.iams.mapper" level="DEBUG" additivity="false">
+		<appender-ref ref="console"/>
+	</logger>
+
     <!-- Level: FATAL 0  ERROR 3  WARN 4  INFO 6  DEBUG 7 -->
     <root level="INFO">
         <appender-ref ref="console"/>
