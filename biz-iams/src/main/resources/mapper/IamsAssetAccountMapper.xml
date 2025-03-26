@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.pig4cloud.pig.biz.iams.mapper.IamsAssetAccountMapper">
+
+  <resultMap id="iamsAssetAccountMap" type="com.pig4cloud.pig.biz.iams.entity.IamsAssetAccountEntity">
+        <id property="assetId" column="asset_id"/>
+        <id property="accountId" column="account_id"/>
+  </resultMap>
+</mapper>

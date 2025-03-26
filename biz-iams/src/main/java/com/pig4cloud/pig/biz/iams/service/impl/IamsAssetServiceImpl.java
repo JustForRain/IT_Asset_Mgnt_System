@@ -42,6 +42,13 @@ public class IamsAssetServiceImpl extends ServiceImpl<IamsAssetMapper, IamsAsset
 		return getOne(queryWrapper);
 	}
 
+	@Override
+	public List<IamsAssetEntity> listBySns(List<String> sns) {
+		LambdaQueryWrapper<IamsAssetEntity> queryWrapper = Wrappers.lambdaQuery();
+		queryWrapper.in(IamsAssetEntity::getSn, sns);
+		return list(queryWrapper);
+	}
+
 	/**
 	 * 根据合同id查询资产总数
 	 *

@@ -3,20 +3,13 @@ package com.pig4cloud.pig.biz.iams.controller;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ArrayUtil;
-import cn.hutool.core.util.RandomUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.pig4cloud.pig.biz.iams.dto.ChangePasswordDto;
 import com.pig4cloud.pig.biz.iams.dto.IamsAccountDto;
-import com.pig4cloud.pig.biz.iams.entity.IamsAccountEntity;
-import com.pig4cloud.pig.biz.iams.entity.IamsAssetEntity;
-import com.pig4cloud.pig.biz.iams.entity.IamsPasswordLogEntity;
-import com.pig4cloud.pig.biz.iams.entity.IamsShelfEntity;
-import com.pig4cloud.pig.biz.iams.service.IamsAccountService;
-import com.pig4cloud.pig.biz.iams.service.IamsAssetService;
-import com.pig4cloud.pig.biz.iams.service.IamsPasswordLogService;
-import com.pig4cloud.pig.biz.iams.service.IamsShelfService;
+import com.pig4cloud.pig.biz.iams.entity.*;
+import com.pig4cloud.pig.biz.iams.service.*;
 import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.common.log.annotation.SysLog;
 import com.pig4cloud.plugin.excel.annotation.ResponseExcel;
@@ -29,6 +22,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -48,6 +42,7 @@ public class IamsAccountController {
 	private final IamsShelfService iamsShelfService;
 	private final IamsAssetService iamsAssetService;
 	private final IamsPasswordLogService iamsPasswordLogService;
+	private final IamsAssetAccountService iamsAssetAccountService;
 
 	/**
 	 * 分页查询
@@ -66,6 +61,20 @@ public class IamsAccountController {
 			IamsAccountDto iamsAccountDto = BeanUtil.copyProperties(iamsAccountEntity, IamsAccountDto.class);
 			IamsShelfEntity shelfEntity = iamsShelfService.getByAssetId(iamsAccountDto.getAssetId());
 			iamsAccountDto.setRole(shelfEntity.getRole());
+			if (!iamsAccountDto.getSingle()) {
+				List<IamsAssetAccountEntity> iamsAssetAccountEntities = iamsAssetAccountService.listByAccountId(iamsAccountDto.getId());
+				List<IamsShelfEntity> iamsShelfEntityList = iamsShelfService.listByAssetIds(iamsAssetAccountEntities.stream().mapToLong(IamsAssetAccountEntity::getAssetId).boxed().toList());
+				StringBuffer stringBuffer = new StringBuffer();
+				iamsShelfEntityList.forEach(iamsShelfEntity -> {
+					stringBuffer.append(iamsShelfEntity.getRole());
+					stringBuffer.append("\n");
+				});
+				// 新增删除逻辑
+				if (!stringBuffer.isEmpty()) {
+					stringBuffer.setLength(stringBuffer.length() - 1);
+				}
+				iamsAccountDto.setRole(stringBuffer.toString());
+			}
 			return iamsAccountDto;
 		}).toList();
 		resultPage.setRecords(list);
@@ -87,6 +96,11 @@ public class IamsAccountController {
 		IamsAccountDto iamsAccountDto = BeanUtil.copyProperties(accountEntity, IamsAccountDto.class);
 		IamsAssetEntity assetEntity = iamsAssetService.getById(accountEntity.getAssetId());
 		iamsAccountDto.setSn(assetEntity.getSn());
+		if (!accountEntity.getSingle()) {
+			List<IamsAssetAccountEntity> iamsAssetAccountEntities = iamsAssetAccountService.listByAccountId(accountEntity.getId());
+			List<IamsAssetEntity> iamsAssetEntities = iamsAssetService.listByIds(iamsAssetAccountEntities.stream().map(IamsAssetAccountEntity::getAssetId).toList());
+			iamsAccountDto.setSns(iamsAssetEntities.stream().map(IamsAssetEntity::getSn).toList());
+		}
 		return R.ok(iamsAccountDto);
 	}
 
@@ -106,18 +120,16 @@ public class IamsAccountController {
 			String sn = iamsAccount.getSn();
 			IamsAssetEntity assetEntity = iamsAssetService.getBySn(sn);
 			iamsAccount.setAssetId(assetEntity.getId());
-			iamsAccount.setVsn(assetEntity.getSn());
 			iamsAccountService.save(iamsAccount);
+			IamsAssetAccountEntity iamsAssetAccountEntity = IamsAssetAccountEntity.builder().assetId(assetEntity.getId()).accountId(iamsAccount.getId()).build();
+			iamsAssetAccountService.save(iamsAssetAccountEntity);
 		} else {
-			//生成一个虚拟设备SN
-			String vsn = RandomUtil.randomString(20);
 			//多设备情况
+			iamsAccountService.save(iamsAccount);
 			iamsAccount.getSns().forEach(sn -> {
-				IamsAssetEntity assetEntity = iamsAssetService.getBySn(sn);
-				iamsAccount.setAssetId(assetEntity.getId());
-				iamsAccount.setVsn(vsn);
-				iamsAccountService.save(iamsAccount);
-				iamsAccount.setId(null);
+				IamsAssetEntity iamsAssetEntity = iamsAssetService.getBySn(sn);
+				IamsAssetAccountEntity assetAccountEntity = IamsAssetAccountEntity.builder().accountId(iamsAccount.getId()).assetId(iamsAssetEntity.getId()).build();
+				iamsAssetAccountService.save(assetAccountEntity);
 			});
 		}
 		return R.ok();
@@ -133,8 +145,31 @@ public class IamsAccountController {
 	@SysLog("修改账户")
 	@PutMapping
 	@PreAuthorize("@pms.hasPermission('iams_iamsAccount_edit')")
-	public R updateById(@RequestBody IamsAccountEntity iamsAccount) {
-		return R.ok(iamsAccountService.updateById(iamsAccount));
+	public R updateById(@RequestBody IamsAccountDto iamsAccount) {
+		if (iamsAccount.getSingle()) {
+			//通过iamsAccount.SN在asset表中查找ASSET ID
+			IamsAssetEntity iamsAssetEntity = iamsAssetService.getBySn(iamsAccount.getSn());
+			//通过ACCOUNT ID在account表查找ASSET ID
+			IamsAccountEntity iamsAccountEntity = iamsAccountService.getById(iamsAccount.getId());
+			if (!iamsAssetEntity.getId().equals(iamsAccountEntity.getAssetId())) {
+				//判断两者资产ID不相等时
+				iamsAccount.setAssetId(iamsAssetEntity.getId());
+			}
+		} else if (iamsAccount.getSns().size() > 1) {
+			iamsAccountService.updateById(iamsAccount);
+			//删除原有的记录
+			iamsAssetAccountService.removeByAccountId(iamsAccount.getId());
+			//插入传入的记录
+			List<String> sns = iamsAccount.getSns();
+			List<IamsAssetEntity> iamsAssetEntities = iamsAssetService.listBySns(sns);
+			List<IamsAssetAccountEntity> saveBatchList = new ArrayList<>();
+			iamsAssetEntities.stream().mapToLong(IamsAssetEntity::getId).forEach(assetId -> {
+				IamsAssetAccountEntity assetAccountEntity = IamsAssetAccountEntity.builder().assetId(assetId).accountId(iamsAccount.getId()).build();
+				saveBatchList.add(assetAccountEntity);
+			});
+			iamsAssetAccountService.saveBatch(saveBatchList);
+		}
+		return R.ok();
 	}
 
 	/**

@@ -25,4 +25,6 @@ public interface IamsAssetService extends IService<IamsAssetEntity> {
 	List<IamsAssetEntity> listAssetByContractId(Long id);
 
 	IamsAssetEntity getBySn(String sn);
+
+	List<IamsAssetEntity> listBySns(List<String> sns);
 }

@@ -1,6 +1,7 @@
 package com.pig4cloud.pig.biz.iams.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.pig4cloud.pig.biz.iams.entity.IamsAccountEntity;
@@ -23,5 +24,18 @@ public class IamsAccountServiceImpl extends ServiceImpl<IamsAccountMapper, IamsA
 		LambdaQueryWrapper<IamsAccountEntity> queryWrapper = Wrappers.lambdaQuery();
 		queryWrapper.eq(IamsAccountEntity::getAssetId, id);
 		return list(queryWrapper);
+	}
+
+	@Override
+	public boolean updateByVsn(IamsAccountEntity iamsAccount) {
+		LambdaUpdateWrapper<IamsAccountEntity> updateWrapper = Wrappers.lambdaUpdate();
+		updateWrapper.eq(IamsAccountEntity::getVsn, iamsAccount.getVsn())
+				.set(IamsAccountEntity::getMacAddress, iamsAccount.getMacAddress())
+				.set(IamsAccountEntity::getUrl, iamsAccount.getUrl())
+				.set(IamsAccountEntity::getPort, iamsAccount.getPort())
+				.set(IamsAccountEntity::getType, iamsAccount.getType())
+				.set(IamsAccountEntity::getProtocol, iamsAccount.getProtocol())
+				.set(IamsAccountEntity::getAccount, iamsAccount.getAccount());
+		return update(updateWrapper);
 	}
 }

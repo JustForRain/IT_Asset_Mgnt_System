@@ -8,4 +8,6 @@ import java.util.List;
 public interface IamsAccountService extends IService<IamsAccountEntity> {
 
     List<IamsAccountEntity> getbyAssetId(Long id);
+
+	boolean updateByVsn(IamsAccountEntity iamsAccount);
 }
