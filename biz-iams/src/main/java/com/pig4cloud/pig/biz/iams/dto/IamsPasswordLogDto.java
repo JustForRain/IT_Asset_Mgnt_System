@@ -27,4 +27,9 @@ public class IamsPasswordLogDto extends IamsPasswordLogEntity {
 	 */
 	private String role;
 
+	/**
+	 * 设备序列号
+	 */
+	private String sn;
+
 }

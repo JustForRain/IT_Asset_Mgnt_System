@@ -4,19 +4,21 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.pig4cloud.pig.biz.iams.dto.IamsPasswordLogDto;
 import com.pig4cloud.pig.biz.iams.entity.IamsAccountEntity;
+import com.pig4cloud.pig.biz.iams.entity.IamsAssetEntity;
 import com.pig4cloud.pig.biz.iams.entity.IamsShelfEntity;
 import com.pig4cloud.pig.biz.iams.service.IamsAccountService;
+import com.pig4cloud.pig.biz.iams.service.IamsAssetService;
 import com.pig4cloud.pig.biz.iams.service.IamsShelfService;
 import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.common.log.annotation.SysLog;
 import com.pig4cloud.pig.biz.iams.entity.IamsPasswordLogEntity;
 import com.pig4cloud.pig.biz.iams.service.IamsPasswordLogService;
-import org.springframework.context.annotation.Bean;
 import org.springframework.security.access.prepost.PreAuthorize;
 import com.pig4cloud.plugin.excel.annotation.ResponseExcel;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -46,6 +48,7 @@ public class IamsPasswordLogController {
     private final  IamsPasswordLogService iamsPasswordLogService;
 	private final IamsAccountService iamsAccountService;
 	private final IamsShelfService iamsShelfService;
+	private final IamsAssetService iamsAssetService;
 
     /**
      * 分页查询
@@ -56,8 +59,25 @@ public class IamsPasswordLogController {
     @Operation(summary = "分页查询" , description = "分页查询" )
     @GetMapping("/page" )
     @PreAuthorize("@pms.hasPermission('iams_iamsPasswordLog_view')" )
-    public R getIamsPasswordLogPage(@ParameterObject Page page, @ParameterObject IamsPasswordLogEntity iamsPasswordLog) {
+    public R getIamsPasswordLogPage(@ParameterObject Page page, @ParameterObject IamsPasswordLogDto iamsPasswordLog) {
         LambdaQueryWrapper<IamsPasswordLogEntity> wrapper = Wrappers.lambdaQuery();
+		wrapper.eq(ObjUtil.isNotNull(iamsPasswordLog.getNewPassword()), IamsPasswordLogEntity::getNewPassword, iamsPasswordLog.getNewPassword());
+		wrapper.eq(ObjUtil.isNotNull(iamsPasswordLog.getOldPassword()), IamsPasswordLogEntity::getOldPassword, iamsPasswordLog.getOldPassword());
+		//帐号条件查询
+		if(StrUtil.isNotBlank(iamsPasswordLog.getAccount())){
+			List<IamsAccountEntity> list = iamsAccountService.list(Wrappers.lambdaQuery(IamsAccountEntity.class).eq(IamsAccountEntity::getAccount, iamsPasswordLog.getAccount()));
+			wrapper.in(!list.isEmpty(), IamsPasswordLogEntity::getAccountId, list.stream().map(IamsAccountEntity::getId).toList());
+		}
+		//设备角色条件查询
+		if(StrUtil.isNotBlank(iamsPasswordLog.getRole())){
+			List<IamsShelfEntity> list = iamsShelfService.list(Wrappers.lambdaQuery(IamsShelfEntity.class).eq(IamsShelfEntity::getRole, iamsPasswordLog.getRole()));
+			wrapper.in(!list.isEmpty(), IamsPasswordLogEntity::getAssetId, list.stream().map(IamsShelfEntity::getAssetId).toList());
+		}
+		//序列号
+		if(StrUtil.isNotBlank(iamsPasswordLog.getSn())){
+			List<IamsAssetEntity> list = iamsAssetService.list(Wrappers.lambdaQuery(IamsAssetEntity.class).eq(IamsAssetEntity::getSn, iamsPasswordLog.getSn()));
+			wrapper.in(!list.isEmpty(), IamsPasswordLogEntity::getAssetId, list.stream().map(IamsAssetEntity::getId).toList());
+		}
 		Page resultPage = iamsPasswordLogService.page(page, wrapper);
 		List records = resultPage.getRecords();
 		List list = records.stream().map(iamsPasswordLogEntity -> {
