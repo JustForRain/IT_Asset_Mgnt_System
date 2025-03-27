@@ -3,14 +3,14 @@ package com.pig4cloud.pig.biz.iams.controller;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ArrayUtil;
+import cn.hutool.core.util.ObjUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.pig4cloud.pig.biz.iams.dto.IamsShelfDto;
-import com.pig4cloud.pig.biz.iams.entity.IamsAssetEntity;
-import com.pig4cloud.pig.biz.iams.entity.IamsShelfEntity;
-import com.pig4cloud.pig.biz.iams.service.IamsAssetService;
-import com.pig4cloud.pig.biz.iams.service.IamsShelfService;
+import com.pig4cloud.pig.biz.iams.entity.*;
+import com.pig4cloud.pig.biz.iams.service.*;
 import com.pig4cloud.pig.biz.iams.vo.SelectOption;
 import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.common.log.annotation.SysLog;
@@ -24,8 +24,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 上架
@@ -42,6 +42,10 @@ public class IamsShelfController {
 
 	private final IamsShelfService iamsShelfService;
 	private final IamsAssetService iamsAssetService;
+	private final IamsRoomService iamsRoomService;
+	private final IamsModuleService iamsModuleService;
+	private final IamsCabinetService iamsCabinetService;
+	private final IamsContractService iamsContractService;
 
 	/**
 	 * 分页查询
@@ -53,8 +57,49 @@ public class IamsShelfController {
 	@Operation(summary = "分页查询", description = "分页查询")
 	@GetMapping("/page")
 	@PreAuthorize("@pms.hasPermission('iams_iamsShelf_view')")
-	public R getIamsShelfPage(@ParameterObject Page page, @ParameterObject IamsShelfEntity iamsShelf) {
+	public R getIamsShelfPage(@ParameterObject Page page, @ParameterObject IamsShelfDto iamsShelf) {
 		LambdaQueryWrapper<IamsShelfEntity> wrapper = Wrappers.lambdaQuery();
+		//存储微模块ID
+		List<Long> moduleIdList = new ArrayList<>();
+		//根据微模块查到微模块ID
+		if (StrUtil.isNotBlank(iamsShelf.getModule())) {
+			List<IamsModuleEntity> iamsModuleEntityList = iamsModuleService.list(Wrappers.lambdaQuery(IamsModuleEntity.class).eq(IamsModuleEntity::getName, iamsShelf.getModule()));
+			iamsModuleEntityList.forEach(iamsModuleEntity -> {
+				if (ObjUtil.isNotNull(iamsModuleEntity) && ObjUtil.isNotNull(iamsModuleEntity.getId())) {
+					moduleIdList.add(iamsModuleEntity.getId());
+				}
+			});
+
+		}
+		//根据机柜查询到微模块ID
+		if(StrUtil.isNotBlank(iamsShelf.getRoom())){
+			//查询机房下的所有微模块和微模块下的所有机柜上架的设备
+			List<IamsRoomEntity> iamsRoomEntityList = iamsRoomService.list(Wrappers.lambdaQuery(IamsRoomEntity.class).eq(IamsRoomEntity::getName,iamsShelf.getRoom()));
+			iamsRoomEntityList.forEach(iamsRoomEntity -> {
+				if(ObjUtil.isNotNull(iamsRoomEntity)&&ObjUtil.isNotNull(iamsRoomEntity.getId())){
+					List<IamsModuleEntity> moduleEntityList = iamsModuleService.listByRoomId(iamsRoomEntity.getId());
+					if (CollUtil.isNotEmpty(moduleEntityList)) {
+						List<Long> list = moduleEntityList.stream().mapToLong(IamsModuleEntity::getId).boxed().toList();
+						moduleIdList.addAll(list);
+					}
+				}
+			});
+		}
+		//存储机柜ID
+		List<Long> cabinetIdList = new ArrayList<>();
+		if(!moduleIdList.isEmpty()){
+			List<IamsCabinetEntity> cabinetEntityList = iamsCabinetService.listByModuleIds(moduleIdList);
+			if(!cabinetEntityList.isEmpty()){
+				List<Long> list = cabinetEntityList.stream().mapToLong(IamsCabinetEntity::getId).boxed().toList();
+				cabinetIdList.addAll(list);
+			}
+		}
+		if (StrUtil.isNotBlank(iamsShelf.getCabinet())) {
+			List<IamsCabinetEntity> cabinetEntityList = iamsCabinetService.list(Wrappers.lambdaQuery(IamsCabinetEntity.class).eq(IamsCabinetEntity::getName, iamsShelf.getCabinet()));
+			List<Long> list = cabinetEntityList.stream().map(IamsCabinetEntity::getId).toList();
+			cabinetIdList.addAll(list);
+		}
+		wrapper.in(CollUtil.isNotEmpty(cabinetIdList), IamsShelfEntity::getCabinetId, cabinetIdList);
 		Page resultPage = iamsShelfService.page(page, wrapper);
 		List<IamsShelfEntity> records = resultPage.getRecords();
 		List<IamsShelfDto> list = records.stream().map(iamsShelfEntity -> {
@@ -67,6 +112,14 @@ public class IamsShelfController {
 			iamsShelfDto.setRole(location.get("role"));
 			return iamsShelfDto;
 		}).toList();
+		//根据项目查询机柜
+		if (StrUtil.isNotBlank(iamsShelf.getProjectName())) {
+			List<IamsAssetEntity> assetByProjectName = iamsContractService.getAssetByProjectName(iamsShelf.getProjectName());
+			if (ObjUtil.isNotNull(assetByProjectName) && !assetByProjectName.isEmpty()) {
+				Set<Long> assetIdSet = assetByProjectName.stream().map(IamsAssetEntity::getId).collect(Collectors.toSet());
+				list = list.stream().filter(iamsShelfDto -> assetIdSet.contains(iamsShelfDto.getAssetId())).collect(Collectors.toList());
+			}
+		}
 		resultPage.setRecords(list);
 		return R.ok(resultPage);
 	}

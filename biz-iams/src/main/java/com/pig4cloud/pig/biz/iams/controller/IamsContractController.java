@@ -2,6 +2,7 @@ package com.pig4cloud.pig.biz.iams.controller;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.ArrayUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -26,6 +27,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * 合同
@@ -55,6 +57,10 @@ public class IamsContractController {
     @PreAuthorize("@pms.hasPermission('pig_iamsContract_view')" )
     public R getIamsContractPage(@ParameterObject Page page, @ParameterObject IamsContractEntity iamsContract) {
         LambdaQueryWrapper<IamsContractEntity> wrapper = Wrappers.lambdaQuery();
+		wrapper.like(StrUtil.isNotBlank(iamsContract.getPurchaser()),IamsContractEntity::getPurchaser,iamsContract.getPurchaser());
+		wrapper.like(StrUtil.isNotBlank(iamsContract.getSeller()),IamsContractEntity::getSeller,iamsContract.getSeller());
+		wrapper.eq(Objects.nonNull(iamsContract.getSigningTime()),IamsContractEntity::getSigningTime,iamsContract.getSigningTime());
+		wrapper.like(StrUtil.isNotBlank(iamsContract.getProjectName()),IamsContractEntity::getProjectName,iamsContract.getProjectName());
 		Page resultPage = iamsContractService.page(page, wrapper);
 		List<IamsContractEntity> records = resultPage.getRecords();
 		resultPage.setRecords(records.stream().map(contract -> {

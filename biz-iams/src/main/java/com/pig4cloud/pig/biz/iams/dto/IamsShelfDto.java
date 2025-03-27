@@ -54,4 +54,9 @@ public class IamsShelfDto extends IamsShelfEntity {
 	 * 设备大小
 	 */
 	private Integer size;
+
+	/**
+	 * 项目名称
+	 */
+	private String projectName;
 }
