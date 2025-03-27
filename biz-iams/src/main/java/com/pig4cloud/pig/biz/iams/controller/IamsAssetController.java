@@ -14,10 +14,7 @@ import com.pig4cloud.pig.biz.iams.entity.IamsAccountEntity;
 import com.pig4cloud.pig.biz.iams.entity.IamsAssetEntity;
 import com.pig4cloud.pig.biz.iams.entity.IamsContractEntity;
 import com.pig4cloud.pig.biz.iams.entity.IamsShelfEntity;
-import com.pig4cloud.pig.biz.iams.service.IamsAccountService;
-import com.pig4cloud.pig.biz.iams.service.IamsAssetService;
-import com.pig4cloud.pig.biz.iams.service.IamsContractService;
-import com.pig4cloud.pig.biz.iams.service.IamsShelfService;
+import com.pig4cloud.pig.biz.iams.service.*;
 import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.common.log.annotation.SysLog;
 import com.pig4cloud.plugin.excel.annotation.ResponseExcel;
@@ -51,6 +48,7 @@ public class IamsAssetController {
 	private final IamsShelfService iamsShelfService;
 	private final IamsContractService iamsContractService;
 	private final IamsAccountService iamsAccountService;
+	private final IamsAssetAccountService iamsAssetAccountService;
 
     /**
      * 分页查询
@@ -185,6 +183,14 @@ public class IamsAssetController {
 		IamsShelfEntity shelfEntity = iamsShelfService.getByAssetId(id);
 		iamsAssetDetailDto.setRole(shelfEntity.getRole());
 		List<IamsAccountEntity> iamsAccountEntityList = iamsAccountService.getbyAssetId(id);
+		if(iamsAccountEntityList.isEmpty()){
+			//单设备查询没有数据的情况下，查询asset_account表
+			iamsAssetAccountService.listByAssetId(id).forEach(account->{
+				Long accountId = account.getAccountId();
+				IamsAccountEntity accountEntity = iamsAccountService.getById(accountId);
+				iamsAccountEntityList.add(accountEntity);
+			});
+		}
 		iamsAssetDetailDto.setAccountList(iamsAccountEntityList);
 		return R.ok(iamsAssetDetailDto);
     }

@@ -59,8 +59,6 @@ public class IamsAccountController {
 		Page resultPage = iamsAccountService.page(page, wrapper);
 		List list = resultPage.getRecords().stream().map(iamsAccountEntity -> {
 			IamsAccountDto iamsAccountDto = BeanUtil.copyProperties(iamsAccountEntity, IamsAccountDto.class);
-			IamsShelfEntity shelfEntity = iamsShelfService.getByAssetId(iamsAccountDto.getAssetId());
-			iamsAccountDto.setRole(shelfEntity.getRole());
 			if (!iamsAccountDto.getSingle()) {
 				List<IamsAssetAccountEntity> iamsAssetAccountEntities = iamsAssetAccountService.listByAccountId(iamsAccountDto.getId());
 				List<IamsShelfEntity> iamsShelfEntityList = iamsShelfService.listByAssetIds(iamsAssetAccountEntities.stream().mapToLong(IamsAssetAccountEntity::getAssetId).boxed().toList());
@@ -74,6 +72,9 @@ public class IamsAccountController {
 					stringBuffer.setLength(stringBuffer.length() - 1);
 				}
 				iamsAccountDto.setRole(stringBuffer.toString());
+			} else {
+				IamsShelfEntity shelfEntity = iamsShelfService.getByAssetId(iamsAccountDto.getAssetId());
+				iamsAccountDto.setRole(shelfEntity.getRole());
 			}
 			return iamsAccountDto;
 		}).toList();
@@ -95,8 +96,9 @@ public class IamsAccountController {
 		IamsAccountEntity accountEntity = iamsAccountService.getById(id);
 		IamsAccountDto iamsAccountDto = BeanUtil.copyProperties(accountEntity, IamsAccountDto.class);
 		IamsAssetEntity assetEntity = iamsAssetService.getById(accountEntity.getAssetId());
-		iamsAccountDto.setSn(assetEntity.getSn());
-		if (!accountEntity.getSingle()) {
+		if (accountEntity.getSingle()) {
+			iamsAccountDto.setSn(assetEntity.getSn());
+		} else {
 			List<IamsAssetAccountEntity> iamsAssetAccountEntities = iamsAssetAccountService.listByAccountId(accountEntity.getId());
 			List<IamsAssetEntity> iamsAssetEntities = iamsAssetService.listByIds(iamsAssetAccountEntities.stream().map(IamsAssetAccountEntity::getAssetId).toList());
 			iamsAccountDto.setSns(iamsAssetEntities.stream().map(IamsAssetEntity::getSn).toList());
@@ -121,8 +123,8 @@ public class IamsAccountController {
 			IamsAssetEntity assetEntity = iamsAssetService.getBySn(sn);
 			iamsAccount.setAssetId(assetEntity.getId());
 			iamsAccountService.save(iamsAccount);
-			IamsAssetAccountEntity iamsAssetAccountEntity = IamsAssetAccountEntity.builder().assetId(assetEntity.getId()).accountId(iamsAccount.getId()).build();
-			iamsAssetAccountService.save(iamsAssetAccountEntity);
+//			IamsAssetAccountEntity iamsAssetAccountEntity = IamsAssetAccountEntity.builder().assetId(assetEntity.getId()).accountId(iamsAccount.getId()).build();
+//			iamsAssetAccountService.save(iamsAssetAccountEntity);
 		} else {
 			//多设备情况
 			iamsAccountService.save(iamsAccount);
@@ -155,6 +157,7 @@ public class IamsAccountController {
 				//判断两者资产ID不相等时
 				iamsAccount.setAssetId(iamsAssetEntity.getId());
 			}
+			iamsAccountService.updateById(iamsAccount);
 		} else if (iamsAccount.getSns().size() > 1) {
 			iamsAccountService.updateById(iamsAccount);
 			//删除原有的记录
@@ -215,7 +218,7 @@ public class IamsAccountController {
 		// 更新account表
 		Long accountId = changePasswordDto.getId();
 		IamsAccountEntity accountEntity = iamsAccountService.getById(accountId);
-		if (accountEntity.getSingle()) {
+//		if (accountEntity.getSingle()) {
 			//单设备改密码
 			accountEntity.setPassword(changePasswordDto.getNewPassword());
 			iamsAccountService.updateById(accountEntity);
@@ -225,23 +228,32 @@ public class IamsAccountController {
 			passwordLogEntity.setAssetId(accountEntity.getAssetId());
 			passwordLogEntity.setOldPassword(changePasswordDto.getOldPassword());
 			passwordLogEntity.setNewPassword(changePasswordDto.getNewPassword());
-			iamsPasswordLogService.save(passwordLogEntity);
-		} else {
-			//多设备改密码
-			iamsAccountService.list(Wrappers.lambdaQuery(new IamsAccountEntity()).eq(IamsAccountEntity::getVsn, accountEntity.getVsn())).forEach(iamsAccountEntity -> {
-				iamsAccountEntity.setPassword(changePasswordDto.getNewPassword());
-				iamsAccountService.updateById(iamsAccountEntity);
-				//增加iams_password_log 记录
-				IamsPasswordLogEntity passwordLogEntity = new IamsPasswordLogEntity();
-				passwordLogEntity.setAccountId(accountId);
-				passwordLogEntity.setAssetId(iamsAccountEntity.getAssetId());
-				passwordLogEntity.setOldPassword(changePasswordDto.getOldPassword());
-				passwordLogEntity.setNewPassword(changePasswordDto.getNewPassword());
+			if(!accountEntity.getSingle()){
+				//多设备情况下，资产ID的处理，保存两条密码修改记录
+				List<IamsAssetAccountEntity> iamsAssetAccountEntities = iamsAssetAccountService.listByAccountId(accountId);
+				iamsAssetAccountEntities.forEach(iamsAssetAccountEntity -> {
+					passwordLogEntity.setAssetId(iamsAssetAccountEntity.getAssetId());
+					iamsPasswordLogService.save(passwordLogEntity);
+					passwordLogEntity.setId(null);
+				});
+			}else {
 				iamsPasswordLogService.save(passwordLogEntity);
-			});
-		}
-
-
+			}
+//		} else {
+//			//todo 多设备更新密码失败
+//			//多设备改密码
+//			iamsAccountService.list(Wrappers.lambdaQuery(new IamsAccountEntity()).eq(IamsAccountEntity::getVsn, accountEntity.getVsn())).forEach(iamsAccountEntity -> {
+//				iamsAccountEntity.setPassword(changePasswordDto.getNewPassword());
+//				iamsAccountService.updateById(iamsAccountEntity);
+//				//增加iams_password_log 记录
+//				IamsPasswordLogEntity passwordLogEntity = new IamsPasswordLogEntity();
+//				passwordLogEntity.setAccountId(accountId);
+//				passwordLogEntity.setAssetId(iamsAccountEntity.getAssetId());
+//				passwordLogEntity.setOldPassword(changePasswordDto.getOldPassword());
+//				passwordLogEntity.setNewPassword(changePasswordDto.getNewPassword());
+//				iamsPasswordLogService.save(passwordLogEntity);
+//			});
+//		}
 		return R.ok();
 	}
 }

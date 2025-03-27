@@ -31,4 +31,11 @@ public class IamsAssetAccountServiceImpl extends ServiceImpl<IamsAssetAccountMap
 		queryWrapper.eq(IamsAssetAccountEntity::getAccountId, id);
 		return remove(queryWrapper);
 	}
+
+	@Override
+	public List<IamsAssetAccountEntity> listByAssetId(Long id) {
+		LambdaQueryWrapper<IamsAssetAccountEntity> queryWrapper = Wrappers.lambdaQuery();
+		queryWrapper.eq(IamsAssetAccountEntity::getAssetId, id);
+		return list(queryWrapper);
+	}
 }

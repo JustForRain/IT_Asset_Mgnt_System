@@ -1,14 +1,22 @@
 package com.pig4cloud.pig.biz.iams.controller;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.ObjUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.pig4cloud.pig.biz.iams.dto.IamsPasswordLogDto;
+import com.pig4cloud.pig.biz.iams.entity.IamsAccountEntity;
+import com.pig4cloud.pig.biz.iams.entity.IamsShelfEntity;
+import com.pig4cloud.pig.biz.iams.service.IamsAccountService;
+import com.pig4cloud.pig.biz.iams.service.IamsShelfService;
 import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.common.log.annotation.SysLog;
 import com.pig4cloud.pig.biz.iams.entity.IamsPasswordLogEntity;
 import com.pig4cloud.pig.biz.iams.service.IamsPasswordLogService;
+import org.springframework.context.annotation.Bean;
 import org.springframework.security.access.prepost.PreAuthorize;
 import com.pig4cloud.plugin.excel.annotation.ResponseExcel;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -36,6 +44,8 @@ import java.util.Objects;
 public class IamsPasswordLogController {
 
     private final  IamsPasswordLogService iamsPasswordLogService;
+	private final IamsAccountService iamsAccountService;
+	private final IamsShelfService iamsShelfService;
 
     /**
      * 分页查询
@@ -48,7 +58,18 @@ public class IamsPasswordLogController {
     @PreAuthorize("@pms.hasPermission('iams_iamsPasswordLog_view')" )
     public R getIamsPasswordLogPage(@ParameterObject Page page, @ParameterObject IamsPasswordLogEntity iamsPasswordLog) {
         LambdaQueryWrapper<IamsPasswordLogEntity> wrapper = Wrappers.lambdaQuery();
-        return R.ok(iamsPasswordLogService.page(page, wrapper));
+		Page resultPage = iamsPasswordLogService.page(page, wrapper);
+		List records = resultPage.getRecords();
+		List list = records.stream().map(iamsPasswordLogEntity -> {
+			IamsPasswordLogDto iamsPasswordLogDto = BeanUtil.copyProperties(iamsPasswordLogEntity, IamsPasswordLogDto.class);
+			IamsAccountEntity accountEntity = iamsAccountService.getById(iamsPasswordLogDto.getAccountId());
+			iamsPasswordLogDto.setAccount(accountEntity.getAccount());
+			IamsShelfEntity shelfEntity = iamsShelfService.getByAssetId(iamsPasswordLogDto.getAssetId());
+			iamsPasswordLogDto.setRole(shelfEntity.getRole());
+			return iamsPasswordLogDto;
+		}).toList();
+		resultPage.setRecords(list);
+		return R.ok(resultPage);
     }
 
 

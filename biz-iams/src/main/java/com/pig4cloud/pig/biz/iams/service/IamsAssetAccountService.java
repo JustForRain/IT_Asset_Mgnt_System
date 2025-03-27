@@ -10,4 +10,6 @@ public interface IamsAssetAccountService extends IService<IamsAssetAccountEntity
 	List<IamsAssetAccountEntity> listByAccountId(Long id);
 
 	Boolean removeByAccountId(Long id);
+
+	List<IamsAssetAccountEntity> listByAssetId(Long id);
 }
