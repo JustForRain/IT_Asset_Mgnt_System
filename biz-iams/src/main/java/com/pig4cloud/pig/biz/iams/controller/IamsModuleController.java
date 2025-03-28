@@ -3,6 +3,8 @@ package com.pig4cloud.pig.biz.iams.controller;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ArrayUtil;
+import cn.hutool.core.util.ObjUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -52,8 +54,16 @@ public class IamsModuleController {
     @Operation(summary = "分页查询" , description = "分页查询" )
     @GetMapping("/page" )
     @PreAuthorize("@pms.hasPermission('iams_iamsModule_view')" )
-    public R getIamsModulePage(@ParameterObject Page page, @ParameterObject IamsModuleEntity iamsModule) {
+    public R getIamsModulePage(@ParameterObject Page page, @ParameterObject IamsModuleDto iamsModule) {
         LambdaQueryWrapper<IamsModuleEntity> wrapper = Wrappers.lambdaQuery();
+		if(StrUtil.isNotBlank(iamsModule.getRoomName())){
+			IamsRoomEntity iamsRoomEntity = iamsRoomService.getOne(Wrappers.lambdaQuery(IamsRoomEntity.class).eq(IamsRoomEntity::getName, iamsModule.getRoomName()));
+			if(ObjUtil.isNotNull(iamsRoomEntity)&&ObjUtil.isNotNull(iamsRoomEntity.getId())){
+			wrapper.eq(IamsModuleEntity::getRoomId,iamsRoomEntity.getId());
+			}
+		}
+		wrapper.eq(ObjUtil.isNotNull(iamsModule.getId()),IamsModuleEntity::getId,iamsModule.getId());
+		wrapper.like(StrUtil.isNotBlank(iamsModule.getName()),IamsModuleEntity::getName,iamsModule.getName());
 		Page searchresult = iamsModuleService.page(page, wrapper);
 		List<IamsModuleEntity> records = searchresult.getRecords();
 		List list = records.stream().map(module -> {
