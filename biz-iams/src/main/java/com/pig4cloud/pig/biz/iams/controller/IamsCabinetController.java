@@ -55,8 +55,11 @@ public class IamsCabinetController {
 	@Operation(summary = "分页查询", description = "分页查询")
 	@GetMapping("/page")
 	@PreAuthorize("@pms.hasPermission('iams_iamsCabinet_view')")
-	public R getIamsCabinetPage(@ParameterObject Page page, @ParameterObject IamsCabinetEntity iamsCabinet) {
+	public R getIamsCabinetPage(@ParameterObject Page page, @ParameterObject IamsCabinetDto iamsCabinet) {
 		LambdaQueryWrapper<IamsCabinetEntity> wrapper = Wrappers.lambdaQuery();
+		wrapper.eq(Objects.nonNull(iamsCabinet.getModuleId()),IamsCabinetEntity::getModuleId,iamsCabinet.getModuleId());
+		wrapper.eq(StrUtil.isNotBlank(iamsCabinet.getRowNum()),IamsCabinetEntity::getRowNum,iamsCabinet.getRowNum());
+		wrapper.eq(StrUtil.isNotBlank(iamsCabinet.getColumnNum()),IamsCabinetEntity::getColumnNum,iamsCabinet.getColumnNum());
 		Page searchResult = iamsCabinetService.page(page, wrapper);
 		List records = searchResult.getRecords();
 		List list = records.stream().map(cabinet -> {
