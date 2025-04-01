@@ -14,6 +14,5 @@
         <id property="port" column="port"/>
         <id property="macAddress" column="mac_address"/>
         <id property="single" column="single"/>
-        <id property="vsn" column="vsn"/>
   </resultMap>
 </mapper>

@@ -3,6 +3,7 @@ package com.pig4cloud.pig.biz.iams.controller;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ArrayUtil;
+import cn.hutool.core.util.ObjUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -121,6 +122,9 @@ public class IamsAccountController {
 			//单设备情况
 			String sn = iamsAccount.getSn();
 			IamsAssetEntity assetEntity = iamsAssetService.getBySn(sn);
+			if(ObjUtil.isNull(assetEntity)){
+				throw new NullPointerException("根据序列号未查询到设备");
+			}
 			iamsAccount.setAssetId(assetEntity.getId());
 			iamsAccountService.save(iamsAccount);
 //			IamsAssetAccountEntity iamsAssetAccountEntity = IamsAssetAccountEntity.builder().assetId(assetEntity.getId()).accountId(iamsAccount.getId()).build();
