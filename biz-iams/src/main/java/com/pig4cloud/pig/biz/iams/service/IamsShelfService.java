@@ -14,4 +14,6 @@ public interface IamsShelfService extends IService<IamsShelfEntity> {
 	IamsShelfEntity getByAssetId(Long assetId);
 
 	List<IamsShelfEntity> listByAssetIds(List<Long> assetIds);
+
+    List<IamsShelfEntity> listByCabinetId(Long id);
 }

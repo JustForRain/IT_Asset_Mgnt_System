@@ -21,4 +21,22 @@ public class IamsCabinetDto extends IamsCabinetEntity {
 	*/
     @Schema(description="微模块名称")
     private String moduleName;
+
+	/**
+	 * 已上架设备数量
+	 */
+	@Schema(description="已上架设备数量")
+	private Integer assetNum;
+
+	/**
+	 * 剩余机架数量
+	 */
+	@Schema(description="剩余机架数量")
+	private Integer shelfNum;
+
+	/**
+	 * 已上架机架数量
+	 */
+	@Schema(description="已上架机架数量")
+	private Integer shelfUsedNum;
 }

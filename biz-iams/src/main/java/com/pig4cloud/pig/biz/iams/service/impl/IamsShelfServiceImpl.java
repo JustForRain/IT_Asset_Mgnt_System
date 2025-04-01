@@ -40,6 +40,13 @@ public class IamsShelfServiceImpl extends ServiceImpl<IamsShelfMapper, IamsShelf
 	}
 
 	@Override
+	public List<IamsShelfEntity> listByCabinetId(Long id) {
+		LambdaQueryWrapper<IamsShelfEntity> wrapper = Wrappers.lambdaQuery();
+		wrapper.eq(IamsShelfEntity::getCabinetId,id);
+		return list(wrapper);
+	}
+
+	@Override
 	public List<IamsShelfEntity> listByAssetIds(List<Long> assetIds) {
 		LambdaQueryWrapper<IamsShelfEntity> wrapper= Wrappers.lambdaQuery();
 		wrapper.in(!assetIds.isEmpty(),IamsShelfEntity::getAssetId,assetIds);

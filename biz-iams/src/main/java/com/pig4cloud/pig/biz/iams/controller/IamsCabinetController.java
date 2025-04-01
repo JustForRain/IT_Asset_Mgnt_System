@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.pig4cloud.pig.biz.iams.dto.IamsCabinetDto;
+import com.pig4cloud.pig.biz.iams.entity.IamsAssetEntity;
 import com.pig4cloud.pig.biz.iams.entity.IamsCabinetEntity;
 import com.pig4cloud.pig.biz.iams.entity.IamsModuleEntity;
 import com.pig4cloud.pig.biz.iams.entity.IamsShelfEntity;
@@ -44,6 +45,7 @@ public class IamsCabinetController {
 	private final IamsModuleService iamsModuleService;
 	private final IamsShelfService iamsShelfService;
 	private final IamsCabinetDetailService iamsCabinetDetailService;
+	private final IamsAssetService iamsAssetService;
 
 	/**
 	 * 分页查询
@@ -65,7 +67,20 @@ public class IamsCabinetController {
 		List list = records.stream().map(cabinet -> {
 			IamsCabinetDto iamsCabinetDto = BeanUtil.copyProperties(cabinet, IamsCabinetDto.class);
 			IamsModuleEntity iamsModule = iamsModuleService.getById(iamsCabinetDto.getModuleId());
+			//设置微模块名称
 			iamsCabinetDto.setModuleName(iamsModule.getName());
+			//配置已上架设备数量
+			List<IamsShelfEntity> iamsShelfList = iamsShelfService.listByCabinetId(iamsCabinetDto.getId());
+			iamsCabinetDto.setAssetNum(iamsShelfList.size());
+			//配置剩余机架数量
+			Integer shelfNum = iamsCabinetDto.getSize();
+			for (IamsShelfEntity shelfEntity : iamsShelfList) {
+				Long assetId = shelfEntity.getAssetId();
+				IamsAssetEntity iamsAssetEntity = iamsAssetService.getById(assetId);
+				shelfNum=shelfNum-iamsAssetEntity.getSize();
+			}
+			iamsCabinetDto.setShelfNum(shelfNum);
+			iamsCabinetDto.setShelfUsedNum(iamsCabinetDto.getSize()-shelfNum);
 			return iamsCabinetDto;
 		}).toList();
 		searchResult.setRecords(list);
