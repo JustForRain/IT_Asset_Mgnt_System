@@ -12,10 +12,11 @@ import com.pig4cloud.pig.biz.iams.service.*;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
- *
  * @author yu.xia
  */
 @Service
@@ -35,13 +36,13 @@ public class IamsCabinetDetailServiceImpl implements IamsCabinetDetailService {
 		//获取已上架的设备
 		List<IamsShelfEntity> shelfEntityList = iamsShelfService.getByCabinetId(id);
 		ArrayList<IamsUnitDetail> unitDetails = new ArrayList<>();
-		for(int i=1;i<=iamsCabinetEntity.getSize();i++){
+		for (int i = 1; i <= iamsCabinetEntity.getSize(); i++) {
 			IamsUnitDetail iamsUnitDetail = new IamsUnitDetail();
 			iamsUnitDetail.setUnitNum(i);
 			unitDetails.add(iamsUnitDetail);
 			int finalI = i;
 			shelfEntityList.forEach(iamsShelfEntity -> {
-				if(finalI >=iamsShelfEntity.getUnitStart()&& finalI <=iamsShelfEntity.getUnitEnd()){
+				if (finalI >= iamsShelfEntity.getUnitStart() && finalI <= iamsShelfEntity.getUnitEnd()) {
 					IamsAssetEntity iamsAssetEntity = iamsAssetService.getById(iamsShelfEntity.getAssetId());
 					IamsShelfDto iamsShelfDto = BeanUtil.copyProperties(iamsAssetEntity, IamsShelfDto.class);
 					iamsShelfDto.setSize(iamsAssetEntity.getSize());
@@ -49,6 +50,11 @@ public class IamsCabinetDetailServiceImpl implements IamsCabinetDetailService {
 					iamsUnitDetail.setDevice(iamsShelfDto);
 				}
 			});
+		}
+		//判断是否需要排序
+		if (iamsCabinetEntity.getSortOrder()) {
+			//逆序
+			Collections.reverse(unitDetails);
 		}
 		iamsRackDetail.setUnitDetails(unitDetails);
 		return iamsRackDetail;
@@ -64,6 +70,5 @@ public class IamsCabinetDetailServiceImpl implements IamsCabinetDetailService {
 	@Override
 	public List<IamsCabinetEntity> getUnitDetailByModuleId(Long moduleId) {
 		return iamsCabinetService.listByModuleId(moduleId);
-
 	}
 }
