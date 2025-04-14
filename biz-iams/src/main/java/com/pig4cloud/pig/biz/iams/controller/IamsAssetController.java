@@ -106,7 +106,8 @@ public class IamsAssetController {
     @PostMapping
     @PreAuthorize("@pms.hasPermission('iams_iamsAsset_add')" )
     public R save(@RequestBody IamsAssetEntity iamsAsset) {
-        return R.ok(iamsAssetService.save(iamsAsset));
+        iamsAsset.setStatus(0);
+		return R.ok(iamsAssetService.save(iamsAsset));
     }
 
     /**
